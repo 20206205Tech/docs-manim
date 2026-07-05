@@ -27,9 +27,9 @@ class KafkaArchitecture(Scene):
             "version": 2,
             "periodEnd": "2026-07-18T05:50:35.450Z",
             "periodStart": "2026-06-16T04:20:13.095Z",
-            "planId": "df82eb45-8517-4578-81ca-58f078bdfb9c",
-            "userId": "b81a248d-90fd-4ae7-aa17-c7da0f210da1",
-            "subscriptionId": "404e3b95-5025-471d-ad81-88f3c20bc3f8"
+            "planId": "df82eb45-...",
+            "userId": "b81a248d-...",
+            "subscriptionId": "404e3b95-..."
         }
         
         # Tạo chuỗi JSON định dạng đẹp
@@ -86,10 +86,5 @@ class KafkaArchitecture(Scene):
             FadeOut(data_packet),
             FadeOut(data_packet_copy)
         )
-        
-        # Hiển thị kết luận xử lý
-        done_text_d = Text("Invoice Created", font_size=14, color=GREEN).next_to(box_d, RIGHT)
-        done_text_c = Text("Notify Sent", font_size=14, color=GREEN).next_to(box_c, RIGHT)
-        self.play(Write(done_text_d), Write(done_text_c))
 
         self.wait(3)

@@ -75,7 +75,7 @@ jobs:
             <h1>Thư mục Media (Manim)</h1>
             <p>Video được render tự động nằm trong các thư mục con.</p>
             <ul>
-              <li><a href="videos/kafka_sim/480p15/KafkaArchitecture.mp4">Xem Video (Quality: Low)</a></li>
+              <li><a href="videos/kafka_sim/1080p60/KafkaArchitecture.mp4">Xem Video</a></li>
             </ul>
           </body>
           </html>' > media/index.html
