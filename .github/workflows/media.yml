@@ -3,8 +3,8 @@ name: Build Manim Media and Deploy
 on:
   push:
     branches: [main]
-    paths:
-      - "**/*.py"
+    # paths:
+    #   - "**/*.py"
   pull_request:
     branches: [main]
 
