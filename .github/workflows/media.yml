@@ -1,0 +1,89 @@
+name: Build Manim Media and Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "**/*.py"
+  pull_request:
+    branches: [main]
+    paths:
+      - "**/*.py"
+
+# Thêm quyền ghi để Github Actions có thể push lên nhánh gh-pages
+permissions:
+  contents: write
+
+jobs:
+  build_media_and_deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # =========================================================
+      # 1. CÀI ĐẶT MÔI TRƯỜNG HỆ THỐNG CHO MANIM
+      # =========================================================
+      - name: Install system dependencies for Manim
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg build-essential libcairo2-dev libpango1.0-dev pkg-config
+
+      # =========================================================
+      # 2. CHUẨN BỊ MÔI TRƯỜNG PYTHON VỚI UV
+      # =========================================================
+      - name: Install uv
+        if: github.ref == 'refs/heads/main'
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        if: github.ref == 'refs/heads/main'
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+
+      - name: Install dependencies
+        if: github.ref == 'refs/heads/main'
+        run: uv sync
+
+      # =========================================================
+      # 3. RENDER VIDEO BẰNG MANIM
+      # =========================================================
+      - name: Render Manim Video
+        # Lưu ý: Đã bỏ cờ '-p' (preview) vì Github Actions không có giao diện đồ họa.
+        # Đang sử dụng '-ql' (chất lượng thấp) để render nhanh. Đổi thành '-qh' nếu cần 1080p.
+        run: uv run manim -ql kafka_sim.py KafkaArchitecture
+
+      # =========================================================
+      # 4. CHUẨN BỊ FILE VÀ DEPLOY LÊN GITHUB PAGES
+      # =========================================================
+      - name: Prepare Web Files
+        if: github.ref == 'refs/heads/main'
+        run: |
+          # Tạo một file index.html đơn giản trong thư mục media để dẫn link tới video
+          # (Đường dẫn thay đổi tùy theo bạn dùng -ql hay -qh)
+          echo '<!DOCTYPE html>
+          <html>
+          <head>
+            <title>Kafka Sim Media</title>
+          </head>
+          <body>
+            <h1>Thư mục Media (Manim)</h1>
+            <p>Video được render tự động nằm trong các thư mục con.</p>
+            <ul>
+              <li><a href="videos/kafka_sim/480p15/KafkaArchitecture.mp4">Xem Video (Quality: Low)</a></li>
+            </ul>
+          </body>
+          </html>' > media/index.html
+
+      - name: Deploy Media to GitHub Pages
+        if: github.ref == 'refs/heads/main'
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./media
+          destination_dir: media  # Deploy vào thư mục con /media trên web
+          keep_files: true        # Giữ lại các file đã deploy từ latex.yml (không xóa root)
