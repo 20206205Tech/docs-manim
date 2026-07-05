@@ -55,7 +55,8 @@ jobs:
       - name: Render Manim Video
         # Lưu ý: Đã bỏ cờ '-p' (preview) vì Github Actions không có giao diện đồ họa.
         # Đang sử dụng '-ql' (chất lượng thấp) để render nhanh. Đổi thành '-qh' nếu cần 1080p.
-        run: uv run manim -ql kafka_sim.py KafkaArchitecture
+        # run: uv run manim -ql kafka_sim.py KafkaArchitecture
+        run: uv run manim -qh kafka_sim.py KafkaArchitecture
 
       # =========================================================
       # 4. CHUẨN BỊ FILE VÀ DEPLOY LÊN GITHUB PAGES
