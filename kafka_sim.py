@@ -32,6 +32,7 @@ class KafkaArchitecture(Scene):
             "subscriptionId": "404e3b95-..."
         }
         
+        
         # Tạo chuỗi JSON định dạng đẹp
         json_str = json.dumps(json_data, indent=2)
         json_display = Text(json_str, font_size=12, font="Consolas").shift(LEFT * 4.5 + DOWN * 1.5)
