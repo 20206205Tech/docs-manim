@@ -7,52 +7,44 @@ on:
       - "**/*.py"
   pull_request:
     branches: [main]
-    paths:
-      - "**/*.py"
 
+# Phân quyền CẦN THIẾT cho GitHub Pages Artifact
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+# Giới hạn chỉ chạy 1 deploy tại 1 thời điểm
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
-  build_media_and_deploy:
+  build_media:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # =========================================================
-      # 1. CÀI ĐẶT MÔI TRƯỜNG HỆ THỐNG CHO MANIM
-      # =========================================================
       - name: Install system dependencies for Manim
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg build-essential libcairo2-dev libpango1.0-dev pkg-config
 
-      # =========================================================
-      # 2. CHUẨN BỊ MÔI TRƯỜNG PYTHON VỚI UV
-      # =========================================================
       - name: Install uv
-        if: github.ref == 'refs/heads/main'
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
 
       - name: Set up Python
-        if: github.ref == 'refs/heads/main'
         uses: actions/setup-python@v5
         with:
           python-version-file: ".python-version"
 
       - name: Install dependencies
-        if: github.ref == 'refs/heads/main'
         run: uv sync
 
-      # =========================================================
-      # 3. CACHE MANIM PARTIAL MOVIE FILES
-      # =========================================================
       - name: Cache Manim Media
-        if: github.ref == 'refs/heads/main'
         uses: actions/cache@v4
         with:
           path: media/
@@ -60,26 +52,14 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-manim-
 
-      # =========================================================
-      # 4. RENDER VIDEO BẰNG MANIM
-      # =========================================================
-      - name: Render Manim Video
-        if: github.ref == 'refs/heads/main'
-        # Dùng cờ -qh để render chất lượng cao (1080p60)
+      - name: Render Manim Video (1080p60)
         run: uv run manim -qh kafka_sim.py KafkaArchitecture
 
-      # =========================================================
-      # 5. CHUẨN BỊ FILE VÀ DEPLOY LÊN GITHUB PAGES
-      # =========================================================
       - name: Prepare Web Files
-        if: github.ref == 'refs/heads/main'
         run: |
-          # Tạo thư mục public để gom các file cần deploy (giúp index.html nằm ở root)
           mkdir -p public/media
-          # Copy toàn bộ kết quả render vào public/media/
           cp -r media/* public/media/
           
-          # Tạo index.html ở thư mục gốc public
           echo '<!DOCTYPE html>
           <html lang="vi">
           <head>
@@ -95,11 +75,19 @@ jobs:
           </body>
           </html>' > public/index.html
 
-      - name: Deploy Media to GitHub Pages
-        if: github.ref == 'refs/heads/main'
-        uses: peaceiris/actions-gh-pages@v3
+      # Upload thư mục public thành Artifact thay vì push code
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./public
-          destination_dir: .  # Deploy ra thư mục gốc của gh-pages
-          keep_files: true    # Giữ lại các file cũ (từ latex.yml hoặc các deploy khác)
+          path: './public'
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build_media
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4 # Hoặc v5
