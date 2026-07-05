@@ -10,7 +10,6 @@ on:
     paths:
       - "**/*.py"
 
-# Thêm quyền ghi để Github Actions có thể push lên nhánh gh-pages
 permissions:
   contents: write
 
@@ -50,41 +49,57 @@ jobs:
         run: uv sync
 
       # =========================================================
-      # 3. RENDER VIDEO BẰNG MANIM
+      # 3. CACHE MANIM PARTIAL MOVIE FILES
+      # =========================================================
+      - name: Cache Manim Media
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache@v4
+        with:
+          path: media/
+          key: ${{ runner.os }}-manim-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-manim-
+
+      # =========================================================
+      # 4. RENDER VIDEO BẰNG MANIM
       # =========================================================
       - name: Render Manim Video
-        # Lưu ý: Đã bỏ cờ '-p' (preview) vì Github Actions không có giao diện đồ họa.
-        # Đang sử dụng '-ql' (chất lượng thấp) để render nhanh. Đổi thành '-qh' nếu cần 1080p.
-        # run: uv run manim -ql kafka_sim.py KafkaArchitecture
+        if: github.ref == 'refs/heads/main'
+        # Dùng cờ -qh để render chất lượng cao (1080p60)
         run: uv run manim -qh kafka_sim.py KafkaArchitecture
 
       # =========================================================
-      # 4. CHUẨN BỊ FILE VÀ DEPLOY LÊN GITHUB PAGES
+      # 5. CHUẨN BỊ FILE VÀ DEPLOY LÊN GITHUB PAGES
       # =========================================================
       - name: Prepare Web Files
         if: github.ref == 'refs/heads/main'
         run: |
-          # Tạo một file index.html đơn giản trong thư mục media để dẫn link tới video
-          # (Đường dẫn thay đổi tùy theo bạn dùng -ql hay -qh)
+          # Tạo thư mục public để gom các file cần deploy (giúp index.html nằm ở root)
+          mkdir -p public/media
+          # Copy toàn bộ kết quả render vào public/media/
+          cp -r media/* public/media/
+          
+          # Tạo index.html ở thư mục gốc public
           echo '<!DOCTYPE html>
-          <html>
+          <html lang="vi">
           <head>
+            <meta charset="UTF-8">
             <title>Kafka Sim Media</title>
           </head>
           <body>
             <h1>Thư mục Media (Manim)</h1>
-            <p>Video được render tự động nằm trong các thư mục con.</p>
+            <p>Video kiến trúc Kafka (1080p60):</p>
             <ul>
-              <li><a href="videos/kafka_sim/1080p60/KafkaArchitecture.mp4">Xem Video</a></li>
+              <li><a href="media/videos/kafka_sim/1080p60/KafkaArchitecture.mp4">Xem Video</a></li>
             </ul>
           </body>
-          </html>' > media/index.html
+          </html>' > public/index.html
 
       - name: Deploy Media to GitHub Pages
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./media
-          destination_dir: media  # Deploy vào thư mục con /media trên web
-          keep_files: true        # Giữ lại các file đã deploy từ latex.yml (không xóa root)
+          publish_dir: ./public
+          destination_dir: .  # Deploy ra thư mục gốc của gh-pages
+          keep_files: true    # Giữ lại các file cũ (từ latex.yml hoặc các deploy khác)
