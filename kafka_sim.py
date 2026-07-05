@@ -24,11 +24,11 @@ class KafkaArchitecture(Scene):
         event_name = Text("SubscriptionPurchasedEvent", font_size=18, color=RED).next_to(box_p, UP)
         
         json_data = {
-            "planId": "df82eb45-8517-4578-81ca-58f078bdfb9c",
-            "userId": "b81a248d-90fd-4ae7-aa17-c7da0f210da1",
             "version": 2,
             "periodEnd": "2026-07-18T05:50:35.450Z",
             "periodStart": "2026-06-16T04:20:13.095Z",
+            "planId": "df82eb45-8517-4578-81ca-58f078bdfb9c",
+            "userId": "b81a248d-90fd-4ae7-aa17-c7da0f210da1",
             "subscriptionId": "404e3b95-5025-471d-ad81-88f3c20bc3f8"
         }
         
