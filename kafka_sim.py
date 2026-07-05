@@ -71,6 +71,8 @@ class KafkaArchitecture(Scene):
 
         # Bước 2: Thu nhỏ JSON thành một "gói tin" (packet) để gửi đi
         # Ban đầu nhãn gói tin vẫn ghi "Event" như cũ
+        # packet = Rectangle(width=0.8, height=0.5, color=RED, fill_opacity=0.8)
+        # packet_label = Text("Event", font_size=12).move_to(packet.get_center())
         # packet = Rectangle(width=1.4, height=0.5, color=RED, fill_opacity=0.8)
         # packet_label = Text("Event", font_size=12).move_to(packet.get_center())
         packet = Rectangle(width=0.6, height=0.4, color=RED, fill_opacity=0.8)
@@ -99,12 +101,12 @@ class KafkaArchitecture(Scene):
 
         self.play(
             # Gói 1 bay lên Document
-            packet.animate.move_to(box_d.get_left() + LEFT*0.3),
-            packet_label.animate.move_to(box_d.get_left() + LEFT*0.3),
+            packet.animate.move_to(box_d.get_left() + LEFT*0.5),
+            packet_label.animate.move_to(box_d.get_left() + LEFT*0.5),
             event_name.animate.next_to(box_d, UP, buff=0.1),
             # Gói 2 bay xuống Conversation
-            packet_copy.animate.move_to(box_c.get_left() + LEFT*0.3),
-            packet_label_copy.animate.move_to(box_c.get_left() + LEFT*0.3),
+            packet_copy.animate.move_to(box_c.get_left() + LEFT*0.5),
+            packet_label_copy.animate.move_to(box_c.get_left() + LEFT*0.5),
             event_name_copy.animate.next_to(box_c, DOWN, buff=0.1),
             run_time=2
         )
@@ -123,20 +125,21 @@ class KafkaArchitecture(Scene):
             FadeOut(event_name_copy)
         )
         
-        # 2. Dịch chuyển Document Service và gói tin đang chờ xử lý sang góc trái
-        # Đồng thời biến đổi nhãn từ "Event" thành "version 5" để phục vụ logic đối so sánh phiên bản (không viết tắt v)
-        new_label = Text("version 5", font_size=12).move_to(LEFT * 4 + DOWN * 0.5)
+        # 2. Dịch chuyển Document Service và gói tin sang góc trái, phóng to gói tin
+        # Đồng thời biến đổi nhãn từ "Event" thành "version 5" rõ ràng, dễ đọc hơn
+        new_packet = Rectangle(width=1.8, height=0.6, color=RED, fill_opacity=0.8).move_to(LEFT * 4 + DOWN * 0.5)
+        new_label = Text("version 5", font_size=16).move_to(LEFT * 4 + DOWN * 0.5)
         self.play(
             box_d.animate.move_to(LEFT * 4 + UP * 2),
             document_svc.animate.move_to(LEFT * 4 + UP * 2),
-            packet.animate.move_to(LEFT * 4 + DOWN * 0.5),
+            Transform(packet, new_packet),
             Transform(packet_label, new_label),
             run_time=1.2
         )
 
         # 3. Vẽ khối DATABASE lớn và tường minh ở trung tâm bên phải
         db_box = Rectangle(width=6.0, height=4.5, color=BLUE).shift(RIGHT * 1.0)
-        db_title = Text("DATABASE STATE", font_size=18, color=BLUE).next_to(db_box, UP, buff=0.2)
+        db_title = Text("DATABASE", font_size=18, color=BLUE).next_to(db_box, UP, buff=0.2)
         
         # Các trường dữ liệu hiện tại trong DB (Đang ở trạng thái cũ: version = 4)
         db_fields = VGroup(
@@ -214,8 +217,8 @@ class KafkaArchitecture(Scene):
         self.wait(1)
 
         # Giả lập một gói tin cũ (version 3) đến muộn xuất hiện ở phía Consumer
-        old_packet = Rectangle(width=1.4, height=0.5, color=GRAY, fill_opacity=0.8).move_to(LEFT * 4 + DOWN * 0.5)
-        old_label = Text("version 3", font_size=12).move_to(old_packet.get_center())
+        old_packet = Rectangle(width=1.8, height=0.6, color=GRAY, fill_opacity=0.8).move_to(LEFT * 4 + DOWN * 0.5)
+        old_label = Text("version 3", font_size=16).move_to(old_packet.get_center())
         old_data_packet = VGroup(old_packet, old_label)
 
         self.play(FadeIn(old_data_packet))

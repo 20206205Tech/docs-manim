@@ -1,0 +1,1 @@
+uv run manim -pql kafka_sim.py KafkaArchitecture
